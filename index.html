@@ -9,30 +9,21 @@
 
 <h1>🚀 LexusLiftPro</h1>
 
-<div style="background:white; padding:20px; border-radius:10px; max-width:400px;">
+<div style="background:white; padding:20px; border-radius:10px; max-width:500px;">
   
-  <h3>Checklist de Inspeção</h3>
+  <h3>Checklist Profissional</h3>
 
-  <label>Item:</label>
-  <select id="item" style="width:100%; padding:10px; margin-bottom:10px;">
-    <option value="cabo de aço">Cabo de aço</option>
-    <option value="gancho">Gancho</option>
-    <option value="corrente">Corrente</option>
-    <option value="trilho">Trilho</option>
-    <option value="alimentação elétrica">Alimentação elétrica</option>
+  <label>Norma:</label>
+  <select id="norma" onchange="carregarChecklist()"
+    style="width:100%; padding:10px; margin-bottom:10px;">
+    <option value="nr11">NR11</option>
+    <option value="nr10">NR10</option>
+    <option value="nr12">NR12</option>
   </select>
 
-  <label>Status:</label>
-  <select id="status" style="width:100%; padding:10px; margin-bottom:10px;">
-    <option value="conforme">Conforme</option>
-    <option value="nao_conforme">Não conforme</option>
-  </select>
+  <div id="checklist"></div>
 
-  <label>Observação:</label>
-  <input id="obs" placeholder="Descreva o problema"
-    style="width:100%; padding:10px; margin-bottom:10px;" />
-
-  <button onclick="salvar()"
+  <button onclick="salvarChecklist()"
     style="width:100%; padding:10px; background:#16a34a; color:white; border:none;">
     Salvar Inspeção
   </button>
@@ -44,46 +35,77 @@
 </div>
 
 <script>
-function salvar() {
 
-  const item = document.getElementById("item").value;
-  const status = document.getElementById("status").value;
-  const obs = document.getElementById("obs").value;
+const itens = {
+  nr11: ["Cabo de aço", "Gancho", "Corrente", "Freio"],
+  nr10: ["Isolamento", "Aterramento", "Painel elétrico"],
+  nr12: ["Botão de emergência", "Proteção", "Sensor"]
+};
+
+function carregarChecklist() {
+  const norma = document.getElementById("norma").value;
+  const div = document.getElementById("checklist");
+
+  div.innerHTML = "";
+
+  itens[norma].forEach(item => {
+    div.innerHTML += `
+      <div style="margin-bottom:10px;">
+        <strong>${item}</strong><br>
+        <select id="${item}">
+          <option value="conforme">Conforme</option>
+          <option value="nao_conforme">Não conforme</option>
+        </select>
+      </div>
+    `;
+  });
+}
+
+async function salvarChecklist() {
+
+  const norma = document.getElementById("norma").value;
 
   document.getElementById("statusText").innerText = "Salvando...";
 
-  fetch("https://api.lexusliftpro.com/inspecao", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      equipamento_id: "equip1",
-      item: item,
-      status: status,
-      observacao: obs
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
+  let resultados = [];
 
-    document.getElementById("resultado").innerText =
-      JSON.stringify(data, null, 2);
+  for (const item of itens[norma]) {
 
-    if (data.os) {
-      document.getElementById("statusText").innerText =
-        "⚠️ OS gerada automaticamente!";
-    } else {
-      document.getElementById("statusText").innerText =
-        "✅ Inspeção conforme!";
+    const status = document.getElementById(item).value;
+
+    try {
+
+      const res = await fetch("https://api.lexusliftpro.com/inspecao", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          equipamento_id: "equip1",
+          item: item,
+          status: status,
+          observacao: norma
+        })
+      });
+
+      const data = await res.json();
+
+      resultados.push(data);
+
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-  })
-  .catch(err => {
-    document.getElementById("statusText").innerText =
-      "❌ Erro: " + err.message;
-  });
+  document.getElementById("resultado").innerText =
+    JSON.stringify(resultados, null, 2);
+
+  document.getElementById("statusText").innerText =
+    "✅ Checklist salvo com sucesso!";
 }
+
+carregarChecklist();
+
 </script>
 
 </body>
