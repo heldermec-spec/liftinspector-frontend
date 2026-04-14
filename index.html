@@ -1,34 +1,60 @@
-<script>
-async function testar() {
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LexusLiftPro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-  const item = document.getElementById("item").value;
+<body style="font-family: Arial; background:#f3f4f6; padding:20px;">
+
+<h1>🚀 LexusLiftPro</h1>
+
+<div style="background:white; padding:20px; border-radius:10px; max-width:400px;">
+  
+  <h3>Teste de Análise IA</h3>
+
+  <input id="item" placeholder="Ex: cabo de aço"
+    style="width:100%; padding:10px; margin-bottom:10px;" />
+
+  <button onclick="testar()"
+    style="width:100%; padding:10px; background:#2563eb; color:white; border:none;">
+    Analisar
+  </button>
+
+  <p id="status"></p>
+
+  <pre id="resultado" style="margin-top:15px;"></pre>
+
+</div>
+
+<script>
+function testar() {
+
+  var item = document.getElementById("item").value;
 
   document.getElementById("status").innerText = "Processando...";
 
-  try {
-
-    const res = await fetch("https://api.lexusliftpro.com/analise", {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ item: item })
-    });
-
-    const data = await res.json();
-
+  fetch("https://api.lexusliftpro.com/analise", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ item: item })
+  })
+  .then(function(res) {
+    return res.json();
+  })
+  .then(function(data) {
     document.getElementById("resultado").innerText =
       JSON.stringify(data, null, 2);
-
     document.getElementById("status").innerText = "✅ Sucesso";
-
-  } catch (error) {
-
+  })
+  .catch(function(err) {
     document.getElementById("status").innerText =
-      "❌ Erro: " + error.message;
-
-    console.log(error);
-  }
+      "❌ Erro: " + err.message;
+  });
 }
 </script>
+
+</body>
+</html>
