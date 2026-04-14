@@ -21,6 +21,8 @@
     Analisar
   </button>
 
+  <p id="status"></p>
+
   <pre id="resultado" style="margin-top:15px;"></pre>
 
 </div>
@@ -28,20 +30,31 @@
 <script>
 async function testar() {
 
-  const item = document.getElementById("item").value;
+  document.getElementById("status").innerText = "Processando...";
 
-  const res = await fetch("https://api.lexusliftpro.com/analise", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ item })
-  });
+  try {
+    const res = await fetch("https://api.lexusliftpro.com/analise", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ item: document.getElementById("item").value })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  document.getElementById("resultado").innerText =
-    JSON.stringify(data, null, 2);
+    document.getElementById("resultado").innerText =
+      JSON.stringify(data, null, 2);
+
+    document.getElementById("status").innerText = "✅ Sucesso";
+
+  } catch (err) {
+
+    document.getElementById("status").innerText =
+      "❌ Erro: " + err.message;
+
+    console.error(err);
+  }
 }
 </script>
 
