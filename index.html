@@ -9,30 +9,50 @@
 
 <h1>🚀 LexusLiftPro</h1>
 
-<div style="background:white; padding:20px; border-radius:10px; max-width:500px;">
-  
-  <h3>Checklist Profissional</h3>
+<h2>📊 Dashboard</h2>
 
-  <label>Norma:</label>
-  <select id="norma" onchange="carregarChecklist()"
-    style="width:100%; padding:10px; margin-bottom:10px;">
-    <option value="nr11">NR11</option>
-    <option value="nr10">NR10</option>
-    <option value="nr12">NR12</option>
-  </select>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
 
-  <div id="checklist"></div>
+  <div style="background:white; padding:15px;">
+    <h3>Total Inspeções</h3>
+    <p id="total">0</p>
+  </div>
 
-  <button onclick="salvarChecklist()"
-    style="width:100%; padding:10px; background:#16a34a; color:white; border:none;">
-    Salvar Inspeção
-  </button>
+  <div style="background:white; padding:15px;">
+    <h3>Não Conformes</h3>
+    <p id="nao">0</p>
+  </div>
 
-  <p id="statusText"></p>
+  <div style="background:white; padding:15px;">
+    <h3>OS Abertas</h3>
+    <p id="os">0</p>
+  </div>
 
-  <pre id="resultado" style="margin-top:15px;"></pre>
+  <div style="background:white; padding:15px;">
+    <h3>Custo Total</h3>
+    <p id="custo">0</p>
+  </div>
 
 </div>
+
+<h2>🛠️ Checklist</h2>
+
+<select id="norma" onchange="carregarChecklist()">
+  <option value="nr11">NR11</option>
+  <option value="nr10">NR10</option>
+  <option value="nr12">NR12</option>
+</select>
+
+<div id="checklist"></div>
+
+<button onclick="salvarChecklist()" style="margin-top:10px; padding:10px; background:green; color:white;">
+Salvar Checklist
+</button>
+
+<p id="status"></p>
+
+<h2>📋 Últimas OS</h2>
+<pre id="lista"></pre>
 
 <script>
 
@@ -50,11 +70,11 @@ function carregarChecklist() {
 
   itens[norma].forEach(item => {
     div.innerHTML += `
-      <div style="margin-bottom:10px;">
-        <strong>${item}</strong><br>
+      <div>
+        ${item}
         <select id="${item}">
-          <option value="conforme">Conforme</option>
-          <option value="nao_conforme">Não conforme</option>
+          <option value="conforme">OK</option>
+          <option value="nao_conforme">Problema</option>
         </select>
       </div>
     `;
@@ -65,46 +85,45 @@ async function salvarChecklist() {
 
   const norma = document.getElementById("norma").value;
 
-  document.getElementById("statusText").innerText = "Salvando...";
-
-  let resultados = [];
-
   for (const item of itens[norma]) {
 
     const status = document.getElementById(item).value;
 
-    try {
+    await fetch("https://api.lexusliftpro.com/inspecao", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        equipamento_id: "equip1",
+        item: item,
+        status: status,
+        observacao: norma
+      })
+    });
 
-      const res = await fetch("https://api.lexusliftpro.com/inspecao", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          equipamento_id: "equip1",
-          item: item,
-          status: status,
-          observacao: norma
-        })
-      });
-
-      const data = await res.json();
-
-      resultados.push(data);
-
-    } catch (err) {
-      console.error(err);
-    }
   }
 
-  document.getElementById("resultado").innerText =
-    JSON.stringify(resultados, null, 2);
+  document.getElementById("status").innerText = "Checklist salvo!";
+  carregarDashboard();
+}
 
-  document.getElementById("statusText").innerText =
-    "✅ Checklist salvo com sucesso!";
+async function carregarDashboard() {
+
+  const res = await fetch("https://api.lexusliftpro.com/dashboard");
+  const data = await res.json();
+
+  document.getElementById("total").innerText = data.totalInspecoes;
+  document.getElementById("nao").innerText = data.naoConformes;
+  document.getElementById("os").innerText = data.osAbertas;
+  document.getElementById("custo").innerText = data.custoTotal;
+
+  document.getElementById("lista").innerText =
+    JSON.stringify(data.listaOS, null, 2);
 }
 
 carregarChecklist();
+carregarDashboard();
 
 </script>
 
