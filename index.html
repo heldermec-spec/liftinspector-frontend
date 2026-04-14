@@ -11,46 +11,76 @@
 
 <div style="background:white; padding:20px; border-radius:10px; max-width:400px;">
   
-  <h3>Teste de Análise IA</h3>
+  <h3>Checklist de Inspeção</h3>
 
-  <input id="item" placeholder="Ex: cabo de aço"
+  <label>Item:</label>
+  <select id="item" style="width:100%; padding:10px; margin-bottom:10px;">
+    <option value="cabo de aço">Cabo de aço</option>
+    <option value="gancho">Gancho</option>
+    <option value="corrente">Corrente</option>
+    <option value="trilho">Trilho</option>
+    <option value="alimentação elétrica">Alimentação elétrica</option>
+  </select>
+
+  <label>Status:</label>
+  <select id="status" style="width:100%; padding:10px; margin-bottom:10px;">
+    <option value="conforme">Conforme</option>
+    <option value="nao_conforme">Não conforme</option>
+  </select>
+
+  <label>Observação:</label>
+  <input id="obs" placeholder="Descreva o problema"
     style="width:100%; padding:10px; margin-bottom:10px;" />
 
-  <button onclick="testar()"
-    style="width:100%; padding:10px; background:#2563eb; color:white; border:none;">
-    Analisar
+  <button onclick="salvar()"
+    style="width:100%; padding:10px; background:#16a34a; color:white; border:none;">
+    Salvar Inspeção
   </button>
 
-  <p id="status"></p>
+  <p id="statusText"></p>
 
   <pre id="resultado" style="margin-top:15px;"></pre>
 
 </div>
 
 <script>
-function testar() {
+function salvar() {
 
-  var item = document.getElementById("item").value;
+  const item = document.getElementById("item").value;
+  const status = document.getElementById("status").value;
+  const obs = document.getElementById("obs").value;
 
-  document.getElementById("status").innerText = "Processando...";
+  document.getElementById("statusText").innerText = "Salvando...";
 
-  fetch("https://api.lexusliftpro.com/analise", {
+  fetch("https://api.lexusliftpro.com/inspecao", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ item: item })
+    body: JSON.stringify({
+      equipamento_id: "equip1",
+      item: item,
+      status: status,
+      observacao: obs
+    })
   })
-  .then(function(res) {
-    return res.json();
-  })
-  .then(function(data) {
+  .then(res => res.json())
+  .then(data => {
+
     document.getElementById("resultado").innerText =
       JSON.stringify(data, null, 2);
-    document.getElementById("status").innerText = "✅ Sucesso";
+
+    if (data.os) {
+      document.getElementById("statusText").innerText =
+        "⚠️ OS gerada automaticamente!";
+    } else {
+      document.getElementById("statusText").innerText =
+        "✅ Inspeção conforme!";
+    }
+
   })
-  .catch(function(err) {
-    document.getElementById("status").innerText =
+  .catch(err => {
+    document.getElementById("statusText").innerText =
       "❌ Erro: " + err.message;
   });
 }
